@@ -294,7 +294,11 @@ class SmartSearchBar extends React.Component {
         this.setState({loading: false});
         return values.map(value => {
           // Wrap in quotes if there is a space
-          return value.indexOf(' ') > -1 ? `"${value}"` : value;
+          const escapedValue = value.indexOf(' ') > -1 ? `"${value}"` : value;
+          return {
+            value: escapedValue,
+            desc: escapedValue,
+          };
         });
       } catch (err) {
         this.setState({loading: false});
@@ -456,7 +460,9 @@ class SmartSearchBar extends React.Component {
       // with actual tag value results
       const filteredSearchItems = !preparedQuery
         ? this.state.searchItems
-        : this.state.searchItems.filter(item => item.value.indexOf(preparedQuery) !== -1);
+        : this.state.searchItems.filter(
+            item => item.value && item.value.indexOf(preparedQuery) !== -1
+          );
 
       this.setState({
         searchTerm: query,
@@ -497,10 +503,13 @@ class SmartSearchBar extends React.Component {
 
   updateAutoCompleteState = (searchItems, recentSearchItems, tagName) => {
     const {maxSearchItems} = this.props;
+    let activeSearchItem;
 
     if (searchItems && searchItems.length > 0) {
-      const index = _.findIndex(searchItems, item => item.type !== 'header');
-      searchItems[index].active = true;
+      activeSearchItem = _.findIndex(searchItems, item => item.type !== 'header');
+      if (activeSearchItem > -1) {
+        searchItems[activeSearchItem].active = true;
+      }
     }
 
     if (maxSearchItems && maxSearchItems > 0) {
@@ -509,7 +518,7 @@ class SmartSearchBar extends React.Component {
 
     this.setState({
       searchItems: [...searchItems, ...recentSearchItems],
-      activeSearchItem: 0,
+      activeSearchItem,
     });
   };
 
